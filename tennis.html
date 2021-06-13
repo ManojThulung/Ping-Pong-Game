@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Tennis Game</title>
+</head>
+<body>
+	<p>
+		This is my first game learning form udemy. 
+	</p>
+
+	<canvas id="gameCanvas" width="800" height="600"></canvas>
+
+	<script type="text/javascript">
+		var canvas;
+		var canvasContext;
+		var ballX = 10;
+		var ballY = 10;
+		var ballSpeedX = 5;
+		var ballSpeedY = 3;
+
+		var paddle1Y = 250;
+		var paddle2Y = 250;
+		const paddle_height = 60;
+
+		const winScore = 5;
+		var winnerCheck = false;
+
+		var playerScore = 0;
+		var computerScore = 0;
+
+		window.onload = function(){
+			canvas = document.getElementById('gameCanvas');
+			canvasContext = canvas.getContext('2d');
+			
+			var frameratePerSec = 60;
+
+			setInterval( function(){
+				drawEverything();
+				moveEverything();
+			}, 1000/frameratePerSec);
+
+			canvas.addEventListener('mousedown', mouseOnClick);
+
+			canvas.addEventListener('mousemove',
+				function(evt){
+					var mousePos = calculateMousePos(evt);
+					// paddle1Y = mousePos.y - (paddle_height/2);
+					paddle1Y = mousePos - (paddle_height/2);
+				}
+			);
+		}
+
+		//computer movement of paddle
+		function computerMovement(){
+			if (winnerCheck){
+				return;
+			}
+
+			var paddle2Center = paddle2Y + (paddle_height/2);
+			if (paddle2Center < ballY - 10){
+				paddle2Y += 3;
+			}
+			else if (paddle2Center > ballY + 10){
+				paddle2Y -= 3;
+			}
+		}
+
+		function moveEverything(){
+			computerMovement();
+
+			ballX += ballSpeedX;
+			ballY += ballSpeedY;
+
+			//when ball reach to the left side ie Player side.
+			if (ballX <= 15){
+				if(ballY > paddle1Y && ballY < paddle1Y + paddle_height){  //ball bounce back to the right when ball tauch the paddle1Y.
+					ballSpeedX = -ballSpeedX; // (-(-ballSeed)) = +ballSpeed.
+					// it is beacuse when ball bounce from the right to left, ballSpeed will bi in negative ie ( -(-3) = + 3)
+					var ballDirection = ballY - (paddle1Y + paddle_height/2);
+					ballSpeedY = ballDirection * 0.45;
+				}
+				else if(ballX < -5) {	
+					computerScore++;
+					reset();	
+				}
+			}
+
+			//next line when ball reach to the right side computer side.
+			if (ballX >= canvas.width-15){ //ball bounce back to the left when ball reach to the right corner
+				if (ballY > paddle2Y && ballY < paddle2Y + paddle_height){
+					ballSpeedX = - ballSpeedX;
+					var ballDirection = ballY - (paddle2Y + paddle_height/2);
+					ballSpeedY = ballDirection * 0.45;
+				}
+				else if (ballX > canvas.width + 5){
+					playerScore++;
+					reset();
+				}
+			}
+
+			//next line ball bounce when reach to bottom wall.
+			if (ballY <= canvas.height){
+				ballSpeedY = -ballSpeedY;
+			}
+
+			//next line ball bounce when reach to top border or wall
+			if (ballY >= 10){
+				ballSpeedY = -ballSpeedY;
+			}
+		}
+
+		function drawEverything(){
+			//next line blanks out the screen with black
+			canvasContext.fillStyle = 'black';
+			canvasContext.fillRect(0,0, canvas.width, canvas.height);
+
+			//next line draws the small white paddle in the left
+			canvasContext.fillStyle = 'white';
+			canvasContext.fillRect(5, paddle1Y, 10,paddle_height);
+
+			//next line draws the small white paddle in the right
+			canvasContext.fillStyle = 'white';
+			canvasContext.fillRect(canvas.width - 15, paddle2Y, 10, paddle_height);
+
+			if (winnerCheck){
+				if (playerScore == winScore){
+					canvasContext.fillText('Congratulation!!! \n You win', 300, 200);
+				}
+				else if (computerScore == winScore){
+					canvasContext.fillText('You loose', 300, 200);
+				}
+
+				canvasContext.fillText('Click to Continue', 300, 400);		
+				return;
+			}
+
+			//next line call the function to draw circle
+			drawCircle(ballX, ballY, 5, 'white');
+
+			//next line write text
+			canvasContext.fillText('Your Score', 250, 50);
+			canvasContext.fillText(playerScore, 250, 60);
+			canvasContext.fillText('Computer Score', canvas.width - 250, 50);
+			canvasContext.fillText(computerScore, canvas.width-250, 60);
+		}
+
+		function drawCircle(centerX, centerY, radius, circleColor) {
+			//next line draw the circle
+			canvasContext.fillStyle = circleColor;
+			canvasContext.beginPath();
+			canvasContext.arc(centerX, centerY, radius, 0, Math.PI*2, true);
+			//				  X-axis    Y-axis			  Pie rad * 2
+			canvasContext.fill(); //display the circle
+		}
+
+		//next line function to get the event of mouse
+		function calculateMousePos(evt){
+			var rect = canvas.getBoundingClientRect() //get event of canvasGame area.
+			var root = document.documentElement;
+			// var mouseX = evt.clientX - rect.left - root.scrollLeft;
+			var mouseY = evt.clientY - rect.top - root.scrollTop;
+
+			return mouseY;
+
+			// return {
+			// 	 x:mouseX,
+			// 	 y:mouseY
+			// };				
+		}
+
+		//next line function to get event when mouse is clicked. so when the game is over it can restart.
+		function mouseOnClick(evt){
+			if(winnerCheck){
+				playerScore = 0;
+				computerScore = 0;
+				winnerCheck = false;
+			}
+		}
+
+		function reset(){
+			if (playerScore >= winScore || computerScore >= winScore){
+				winnerCheck = true;
+			}
+
+			ballSpeedX = -ballSpeedX;
+			ballX = canvas.width/2;
+			ballY = canvas.height/2;
+		}
+
+	</script>
+
+</body>
+</html>
